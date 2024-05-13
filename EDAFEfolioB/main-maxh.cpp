@@ -17,10 +17,8 @@
 
 #include <iostream>
 #include <sstream>
-#include <string>
 #include "maxh.h"
 using namespace std;
-
 
 constexpr int hashFunction(const char* str, int hash = 0) {
     return *str == '\0' ? hash : hashFunction(str + 1, hash + static_cast<int>(*str));
@@ -39,11 +37,11 @@ enum CommandHash {
     REDIM_MAX = hashFunction("redim_max")
 };
 
- // Funcao que recebe o input e define o que vai fazer
-void parseCommand(const std::string& input, IMAXH* heap) {
-    std::istringstream iss(input);
-    std::string cmd;
-    int item, pos, pos1, pos2;
+// Funcao que recebe o input e define o que vai fazer
+void parseCommand(const string& input, IMAXH* heap) {
+    istringstream iss(input);
+    string cmd;
+    int item;
     iss >> cmd;
 
     // Criei a hashFunction para poder usar o switch case, visto que em c++ apenas integers, chars e enums sao aceites.
@@ -51,28 +49,52 @@ void parseCommand(const std::string& input, IMAXH* heap) {
     switch (hashFunction(cmd.c_str())) {
     case INSERT:
         while (iss >> item) // enquanto houver argumentos na linha, vai inserir no heap
+        {
+            if (heap->get_current_size() >= heap->get_max()) // verifica se o heap esta cheio
+            {
+                cout << "Comando insert: Heap cheio!\n"; // Se estiver cheio, imprime uma mensagem
+                break;
+            }
             heap->insert(item);
+        }
         break;
     case PRINT_MAX:
-        heap->print_max(); // retorna o maior valor do heap (raiz)
+        if (heap->get_current_size() <= 0) { // verifica se o heap esta vazio
+            cout << "Comando print_max: Heap vazio!\n";
+            break;
+        }
+        heap->print_max(); // imprime o maior valor do heap
         break;
     case PRINT:
-        heap->print(); // imprime heap
+        if (heap->get_current_size() <= 0) { // verifica se o heap esta vazio
+            cout << "Comando print: Heap vazio!\n"; // Se estiver vazio, imprime uma mensagem e retorna
+            break;
+        }
+        heap->print(); // imprime o heap
         break;
     case DIM:
-        heap->dim();
+        heap->dim(); // imprime a dimensao do heap
         break;
     case DIM_MAX:
-        heap->dim_max();
+        heap->dim_max(); // imprime o numero de elementos maximo que o heap pode ter
         break;
     case CLEAR:
-        heap->clear(); 
+        if (heap->get_current_size() <= 0) { // verifica se o heap esta vazio
+            cout << "Comando clear: Heap vazio!\n";
+            break;
+        }
+        heap->clear(); // remove os elementos do heap
         break;
     case DELETE:
-        heap->remove_max();
+        if (heap->get_current_size() <= 0) { // verifica se o heap esta vazio
+            cout << "Comando delete: Heap vazio!\n";
+            break;
+        }
+        heap->remove_max(); // remove o valor maximo do heap
         break;
     case HEAPIFY_UP:
     {
+        //criamos um auxiliar para o novo heap antes de fazer o heapify
         int* items = new int[heap->get_max()]; // Alocar a memoria para o numero maximo do heap
         int nItems = 0;
         while (iss >> item && nItems < heap->get_max())
@@ -80,14 +102,15 @@ void parseCommand(const std::string& input, IMAXH* heap) {
             items[nItems] = item;
             nItems++;
         }
-        heap->heapify_up(items);
+        heap->heapify_up(items, nItems); // corremos o heapify_up com o algoritmo bottom_up
         delete[] items; // elimina o vector de items para nao termos memory leaks
         break;
     }
     case REDIM_MAX:
-        heap->redim_max(); 
+        iss >> item;
+        heap->redim_max(item); // redimensiona o tamanho maximo do heap
         break;
-    default: // ignora tudo o que n�o for um comando (exemplo: # teste 00)
+    default: // ignora tudo o que nao for um comando (exemplo: # teste 00)
         break;
     }
 }
@@ -95,33 +118,16 @@ void parseCommand(const std::string& input, IMAXH* heap) {
 
 
 int main() {
-    IMAXH maxheap;   // exemplo
-    std::string line; // variavel que guarda o comando
-
-    maxheap;
+    string line; // variavel que guarda o comando
+    IMAXH* maxheap = new IMAXH();   // criamos uma instancia do heap
 
     // Loop enquanto houver linhas no ficheiro, usando o std::getline para ir 
     // buscar a linha de input e introduzi-la na variavel line
-    while (std::getline(std::cin, line)) {
+    while (getline(cin, line)) {
 
         // Analisa o comando
-        parseCommand(line, &maxheap);
+        parseCommand(line, maxheap);
     }
-
-    // Exemplo de uso
-    /*maxheap.insert(3);
-    maxheap.insert(2);
-    maxheap.insert(15);
-    maxheap.insert(5);
-    maxheap.insert(4);
-    maxheap.insert(45);
-
-    cout << "Max heap: ";
-    maxheap.print();
-
-    cout << "Removendo o maximo: " << maxheap.removeMax() << endl;
-    cout << "Max heap apos remocao: ";
-    maxheap.print();*/
 
     return 0;
 }

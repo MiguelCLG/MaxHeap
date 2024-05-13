@@ -1,5 +1,6 @@
-﻿  maxh.cpp
-C:\Users\Miguel\source\repos\EDAFEfolioB\EDAFEfolioB\maxh.cpp(67,25): warning C4244: '+=': conversion from 'double' to 'int', possible loss of data
+﻿  main-maxh.cpp
+  maxh.cpp
+  Generating Code...
   EDAFEfolioB.vcxproj -> C:\Users\Miguel\source\repos\EDAFEfolioB\x64\Debug\EDAFEfolioB.exe
   'pwsh.exe' is not recognized as an internal or external command,
   operable program or batch file.

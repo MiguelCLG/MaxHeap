@@ -14,8 +14,16 @@
 
 #include "maxh.h"
 #include <iostream>
+#include <cmath>
+
 using namespace std;
 
+
+void IMAXH::swap(int& a, int& b) {
+    int temp = a;
+    a = b;
+    b = temp;
+}
 
 IMAXH::IMAXH(int nmax) {
     nv = nmax;
@@ -28,57 +36,43 @@ IMAXH::~IMAXH() {
     v = nullptr;
 }
 
-void IMAXH::swap(int& a, int& b) {
-    int temp = a;
-    a = b;
-    b = temp;
-}
-
 void IMAXH::insert(int item) {
-    if (n >= nv) {
-        cout << "Comando insert: Heap cheio!\n";
-        return;
-    }
-
-    v[n] = item; // Insere o item na próxima posição disponível
-    int index = n; // Índice do novo elemento
-
-    // Corrige a posição do novo elemento enquanto ele for maior que o pai, de maneira ao heap ficar com os valores maiores em cima e os menores em baixo
-    while (index > 0 && v[(index - 1) / 2] < v[index]) {
-        swap(v[(index - 1) / 2], v[index]);
-        index = (index - 1) / 2;
-    }
-
-    n++; // Aumenta o contador de elementos
+    // Insere o novo item no final do vetor
+    v[n] = item;
+    n++; // Incrementa o contador de elementos do heap
 }
 
 void IMAXH::print() {
-    if (n <= 0) {
-        cout << "Comando print: Heap vazio!\n";
-        return;
-    }
-    cout << "Heap=";
-    int level = 0;
-    int count = 0;
+    heapify_top_down(v, n); // ordenamos o heap
+
+    // Imprime a árvore do heap
+    cout << "Heap="; // Imprime o cabeçalho da árvore do heap
+    int level = 0; // Inicializa o nível atual da árvore
+    int count = 0; // Inicializa o contador de elementos por nível
     for (int i = 0; i < n; ++i) {
+        // Verifica se é necessário mudar de linha para o próximo nível da árvore
         if (i == count) {
-            cout << endl;
-            count += pow(2, level);
-            level++;
+            cout << "\n"; // Muda de linha
+            count += (int)pow(2, level); // Atualiza o contador de elementos por nível
+            level++; // Incrementa o nível atual da árvore
         }
-        cout << v[i] << " ";
+        // Imprime o elemento atual do heap
+        cout << v[i];
+        // Verifica se é o último elemento do nível atual
+        if (i != count - 1 && i != n - 1) {
+            cout << " "; // Imprime um espaço se não for o último elemento do nível e não for o último elemento do heap
+        }
     }
-    cout << endl;
+    cout << "\n"; // Imprime uma nova linha no final da árvore do heap
 }
 
 void IMAXH::print_max()
 {
-    if (n <= 0) {
-        cout << "Comando print_max: Heap vazio!\n";
-        return;
-    }
+    // Ajusta os elementos do heap
+    heapify_up(v, n);
+
     // como o primeiro elemento é sempre o maior apenas temos de imprimir o primeiro elemento do vector
-    cout << "Max= " << v[0] << endl;
+    cout << "Max= " << v[0] << "\n";
 }
 
 void IMAXH::dim()
@@ -92,53 +86,99 @@ void IMAXH::dim_max()
 }
 
 void IMAXH::clear() {
+    delete[] v;
+    v = new int[nv];
     n = 0; // Define o número de elementos como zero
 }
 
 void IMAXH::remove_max() {
-    if (n <= 0) {
-        cout << "Comando delete: Heap vazio!\n";
-        return;
-    }
-
+    heapify_top_down(v, n);
     int maxItem = v[0]; // O maior item é o primeiro elemento
     v[0] = v[n - 1]; // Substitui o primeiro elemento pelo último
+    v[n - 1] = '\0';
     n--; // Reduz o tamanho do heap
-    heapify_down(0); // Reorganiza o heap para baixo a partir do índice 0
+    heapify_bottom_up(0); // Reorganiza o heap a partir da raiz
 }
 
-void IMAXH::heapify_down(int index) {
+void IMAXH::heapify_bottom_up(int index) {
+    // Inicialmente, assumimos que o nó atual é o maior
     int largest = index;
+
+    // Calcula os índices dos filhos esquerdo e direito
     int left = 2 * index + 1;
     int right = 2 * index + 2;
 
+    // Verifica se o filho esquerdo existe e se é maior que o nó atual
     if (left < n && v[left] > v[largest])
         largest = left;
 
+    // Verifica se o filho direito existe e se é maior que o nó atual ou o filho esquerdo
     if (right < n && v[right] > v[largest])
         largest = right;
 
+    // Se o maior elemento não for o próprio nó atual, faz a troca e continua a heapify_down recursivamente
     if (largest != index) {
         swap(v[index], v[largest]);
-        heapify_down(largest);
+        heapify_bottom_up(largest);
     }
 }
 
-void IMAXH::heapify_up(int* items) // recebe um vetor de items
-{
+void IMAXH::heapify_up(int* items, int numItems) {
+
+    // criamos uma lista auxiliar pois os items podem ser um ponteiro para o vector atual do heap
+    int* aux = new int[nv];
+    for (int j = 0; j < numItems; j++) {
+        aux[j] = items[j];
+    }
     clear(); // Limpa o heap existente
 
-    // Insere cada item no vetor
-    for (int i = 0; items[i] != '\0'; ++i) {
-        insert(items[i]);
+    // Copiar os elementos do array auxiliar para o heap
+    for (int i = 0; i < numItems; ++i) {
+        v[i] = aux[i];
     }
+    n = numItems;
+
+    // Construimos o heap usando o algoritmo bottom-up
+    for (int i = n / 2 - 1; i >= 0; --i) {
+        heapify_bottom_up(i);
+    }
+
+    delete[] aux; // libertamos o auxiliar
 }
 
-void IMAXH::redim_max()
+void IMAXH::heapify_top_down(int* items, int numItems) {
+
+    // criamos uma lista auxiliar pois os items podem ser um ponteiro para o vector atual do heap 
+    int* aux = new int[nv];
+    for (int j = 0; j < numItems; j++)
+    {
+        aux[j] = items[j];
+    }
+    clear(); // Limpa o heap existente
+
+    // Inserir os elementos do array no heap
+    for (int i = 0; i < numItems; ++i) {
+        insert(aux[i]);
+
+        // Corrigir o heap chamando heapify_up a partir do último índice inserido
+        int index = n - 1;
+        while (index > 0 && v[(index - 1) / 2] < v[index]) {
+            swap(v[(index - 1) / 2], v[index]);
+            index = (index - 1) / 2;
+        }
+    }
+    delete[] aux;
+}
+
+void IMAXH::redim_max(int N)
 {
+    // Liberta a memória alocada para o vetor antigo
+    nv = N;
+    clear();
 }
 
 int IMAXH::get_max() { return nv; }
+int IMAXH::get_current_size() { return n; }
 
 
 

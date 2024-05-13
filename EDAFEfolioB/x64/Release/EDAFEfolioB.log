@@ -1,0 +1,3 @@
+﻿  maxh.cpp
+C:\Users\Miguel\source\repos\EDAFEfolioB\EDAFEfolioB\maxh.cpp(49,34): warning C4804: '<': unsafe use of type 'bool' in operation
+LINK : fatal error LNK1104: cannot open file 'C:\Users\Miguel\source\repos\EDAFEfolioB\x64\Release\EDAFEfolioB.exe'
